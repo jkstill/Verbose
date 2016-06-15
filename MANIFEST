@@ -1,0 +1,8 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/verbose.t
+lib/verbose.pm
+bin/verbose_demo.pl
+
