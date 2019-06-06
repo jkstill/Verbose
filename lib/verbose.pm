@@ -82,6 +82,8 @@ sub new {
 	use Data::Dumper;
 	use Carp;
 
+	$Data::Dumper::Terse=1;
+
 	my $pkg = shift;
 	my $class = ref($pkg) || $pkg;
 	#print "Class: $class\n";
