@@ -3,8 +3,8 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
-	NAME              => 'verbose',
-	VERSION_FROM      => 'lib/verbose.pm', # finds $VERSION
+	NAME              => 'Verbose',
+	VERSION_FROM      => 'lib/Verbose.pm', # finds $VERSION
 	EXE_FILES			=> [
 		qw{bin/verbose_demo.pl}
 	],

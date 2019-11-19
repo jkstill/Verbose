@@ -3,16 +3,16 @@
 
 cd ..
 
-tar cvfz verbose/verbose_0.02.tgz \
- verbose/Makefile.PL \
- verbose/README \
- verbose/t/verbose.t \
- verbose/Changes \
- verbose/MANIFEST \
- verbose/lib/verbose.pm \
- verbose/make_dist.sh \
- verbose/Makefile \
- verbose/bin/verbose_demo.pl
+tar cvfz Verbose/Verbose_0.02.tgz \
+ Verbose/Makefile.PL \
+ Verbose/README.md \
+ Verbose/t/verbose.t \
+ Verbose/Changes \
+ Verbose/MANIFEST \
+ Verbose/lib/Verbose.pm \
+ Verbose/make_dist.sh \
+ Verbose/Makefile \
+ Verbose/bin/verbose_demo.pl
 
 
 

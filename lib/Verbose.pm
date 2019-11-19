@@ -44,7 +44,7 @@ The levels are 1..N
 =cut
 
 
-package verbose;
+package Verbose;
 
 use strict;
 use warnings;
