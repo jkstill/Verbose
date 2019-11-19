@@ -1,7 +1,6 @@
-verbose version 0.01
-====================
+# Verbose version 0.01
 
-The verbose.pm module can be used to include informative statements
+The Verbose.pm module can be used to include informative statements
 in your scripts that are only displayed when the level of verbosity
 stated at runtime is >= the level of verbosity for the statement.
 
@@ -13,6 +12,8 @@ Consider the output from the demo script verbose_demo.pl.
 With a verbosity of 1, only those statements in the script
 that have a verbosity level of 1 will be displayed:
 
+```bash
+
 jkstill-27 > verbose_demo.pl -v 1
 doing some work with @a
   ======= reference to @a - level 1 =========
@@ -23,10 +24,11 @@ doing some work with @a
 doing some work with %h
 doing some work with with an anonymous hash
 doing some work with with an anonymous array
-
+```
 
 Setting it to 2 will include more statements:
 
+```
 jkstill-27 > verbose_demo.pl -v 2
 doing some work with @a
   ======= reference to @a - level 1 =========
@@ -42,28 +44,26 @@ doing some work with %h
     ============================================
 doing some work with with an anonymous hash
 doing some work with with an anonymous array
+```
 
 The two statements in the script that were displayed:
 
+```perl
 $d->print(1,'reference to @a', \@a);
 $d->print(2,'reference to %h', \%h);
+```
 
 
-
-
-
-
-
-INSTALLATION
+# INSTALLATION
 
 To install this module type the following:
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+- perl Makefile.PL
+- make
+- make test
+- make install
 
-DEPENDENCIES
+# DEPENDENCIES
 
 This module requires these other modules and libraries:
 
