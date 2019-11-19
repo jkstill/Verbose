@@ -5,7 +5,7 @@ cd ..
 
 tar cvfz Verbose/Verbose_0.02.tgz \
  Verbose/Makefile.PL \
- Verbose/README \
+ Verbose/README.md \
  Verbose/t/verbose.t \
  Verbose/Changes \
  Verbose/MANIFEST \
