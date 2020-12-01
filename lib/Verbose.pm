@@ -1,22 +1,14 @@
 
-# pass VERBOSE => 0, 1..N
-# 0 is off  1-N are levels to display by 
-# subsequent print() calls
-#  pass LABELS=> 0 or 1 - off or on
-#  pass TIMESTAMP=> 0 or 1 - off or on
-# pass handle for output 
-# can be filehandle, stderr, stdout, etc
-
 =head1 ABSTRACT
 
- A simpple module used to provide optional debugging 
+ A simple module used to provide optional debugging 
  and informational messages
 
 =head1 SYNOPSIS
 
-use verbose;
+ use Verbose;
 
-  my $d = verbose->new(
+  my $d = Verbose->new(
   {
     VERBOSITY=>3, 
     LABELS=>1, 
@@ -25,10 +17,12 @@ use verbose;
     } 
   );
 
-my %h=(a=>1, b=>2, c=>3);
+ my %h=(a=>1, b=>2, c=>3);
 
-print "doing some work with \%h\n";
-$d->print(2,'reference to %h', \%h);
+ print "doing some work with \%h\n";
+ $d->print(2,'reference to %h', \%h);
+
+ HANDLE will default to *STDOUT if not specified
 
 =head1 DESCRIPTION
 
@@ -43,15 +37,13 @@ The levels are 1..N
 
 =cut
 
-
 package Verbose;
 
 use strict;
 use warnings;
 
-require Exporter;
-our @ISA= qw(Exporter);
-#our @EXPORT_OK = ( 'showself','print');
+use Exporter qw(import);
+our @EXPORT_OK = qw(new showself print);
 our $VERSION = '0.02';
 
 use POSIX qw(strftime);
@@ -59,12 +51,12 @@ use Time::HiRes qw(gettimeofday);
 
 =head2 new
 
- Create a new verbose object
+ Create a new Verbose object
 
  my $verbosity=2;
  my $useTimestamp=1;
 
- my $d = verbose->new(
+ my $d = Verbose->new(
     {
        VERBOSITY=>$verbosity,
        LABELS=>1,
@@ -126,12 +118,12 @@ sub new {
  $d->showself;
 
  $VAR1 = bless( {
-                 'CLASS' => 'verbose',
+                 'CLASS' => 'Verbose',
                  'HANDLE' => *::STDERR,
                  'VERBOSITY' => 2,
                  'TIMESTAMP' => 0,
                  'LABELS' => 1
-               }, 'verbose' );
+               }, 'Verbose' );
 
 =cut 
 
@@ -164,24 +156,25 @@ sub getlvl {
 
  $d->print(2,"This is a label",[0,1,2])
  $d->print(4,'anonymous array ref', [7,8,9]);
+
+ returns 0 if nothing printed
+ returns 1 if content printed
  
 =cut
-
 
 sub print {
 	use Carp;
 	my $self = shift;
-	my ($verboseLvl,$label, $data) = @_;
+	my @t=();
+	my ($verboseLvl,$label, $data) = (0,'',\@t);
+	($verboseLvl,$label, $data) = @_;
 
-	return unless ($verboseLvl <= $self->{VERBOSITY} );
+	return 0 unless ($verboseLvl <= $self->{VERBOSITY} );
 
 	# handle could be stdout,stderr, filehandle, etc
 	my $handle = $self->{HANDLE};
-	#print $handle Dumper($self);
 
-	#print "VERBOSITY LVL: $self->{VERBOSITY} \n";
 	my $padding='  ' x $verboseLvl;
-	#print "PADDING: $padding|\n";
 
 	my $isRef = ref($data) ? 1 : 0;
 
@@ -191,10 +184,9 @@ sub print {
 	#print "reftype: $refType\n";
 
 	my $wallClockTime='';
-	my ($dummy,$microSeconds)=(0,0);
 	if ( $self->{TIMESTAMP} ) {
-		($dummy,$microSeconds)=gettimeofday();
-		$wallClockTime = strftime("%Y-%m-%d %H:%M:%S",localtime) . '.' . sprintf("%06d",$microSeconds);
+		# include microseconds via gettimeofday()
+		$wallClockTime = strftime("%Y-%m-%d %H:%M:%S",localtime) . '.' . sprintf("%06d",(gettimeofday())[1]);
 	}
 
 	print $handle "$wallClockTime$padding======= $label - level $verboseLvl =========\n" if $self->{LABELS} ;
@@ -220,47 +212,134 @@ sub print {
 	# this is how to do label only
 	print $handle "$padding============================================\n" if $self->{LABELS} and $isThereData;
 
+	return 1;
 }
+
+=head1 Example Usage 
+
+Three levels of verbosity will be set
+
+ 1. show function name
+ 2. show internal function messages
+ 3. dump data structures
+
+ Optional messages are passed in the array []
+
+=head2 Procedural
+
+ use Avail::Check::Tools::Verbose qw( showself print);
+ use Data::Dumper;
+ $Data::Dumper::Deparse=1;
+ use strict;
+ use warnings;
+ 
+ sub getVerboseFnameLvl {return 1}
+ sub getVerboseDetailLvl {return 2}
+ sub getVerboseDumpLvl {return 3}
+
+ my $verbosity=2;
+
+ my $v = Avail::Check::Tools::Verbose->new(
+   {
+     VERBOSITY=> $verbosity,
+     LABELS=>1,
+     TIMESTAMP=>1,
+     HANDLE=>*STDERR
+   }
+ );
+
+
+ $v->print(1,'testing',[]);
+
+ vcheck ($v);
+
+ sub vcheck {
+   my ($v) = @_;  
+
+   my $fname = (caller(0))[3];
+
+   $v->print(getVerboseFnameLvl(),$fname,[]);
+   $v->print(getVerboseDetailLvl(),'This is an internal process',[]);
+
+   # nothing printed unless verbosity set to 3+
+   my @a=(0,1,2,3);
+   my %h=( a => 'A', b => 'B');
+
+   $v->print(getVerboseDumpLvl(),'contents of an array', \@a );
+   $v->print(getVerboseDumpLvl(),'contents of a hash', \%h );
+
+   # use Dumper
+   $v->print(getVerboseDumpLvl(),'Dumping an an array', [ Dumper(\@a) ] );
+   $v->print(getVerboseDumpLvl(),'Dumping a hash', [ Dumper(\%h) ] );
+
+   return;  
+ }
+
+=head2 Object Oriented
+
+ use warnings;
+ use strict;
+
+ # object based
+
+ my $v = Vtest->new( { VERBOSITY => 3 } );
+ $v->vcheck();
+
+ package Vtest;
+
+ use Data::Dumper;
+ use Avail::Check::Tools::Verbose qw( showself print);
+
+ sub getVerboseFnameLvl {return 1}
+ sub getVerboseDetailLvl {return 2}
+ sub getVerboseDumpLvl {return 3}
+
+ sub new {
+
+   my $pkg = shift;
+   my $class = ref($pkg) || $pkg;
+   my $parmHash = shift;
+
+   my $self->{PARMS} = $parmHash;
+
+   $self->{VERBOSE} = Avail::Check::Tools::Verbose->new(
+      {
+         VERBOSITY=>$parmHash->{VERBOSITY},
+         LABELS=>1,
+         TIMESTAMP=>1,
+         HANDLE=>*STDERR
+      }
+   );
+
+   my $retval = bless $self, $class;
+   return $retval;
+ }
+
+ sub vcheck {
+   my $self = shift;
+
+   my $fname = (caller(0))[3];
+
+   $self->{VERBOSE}->print(getVerboseFnameLvl(),$fname,[]);
+   $self->{VERBOSE}->print(getVerboseDetailLvl(),$fname,[]);
+
+   # nothing printed unless verbosity set to 3+
+   my @a=(0,1,2,3);
+   my %h=( a => 'A', b => 'B');
+
+   $v->{VERBOSE}->print(getVerboseDumpLvl(),'contents of an array', \@a );
+   $v->{VERBOSE}->print(getVerboseDumpLvl(),'contents of a hash', \%h );
+
+   # use Dumper
+   $v->{VERBOSE}->print(getVerboseDumpLvl(),'Dumping an array', [ Dumper(\@a) ] );
+   $v->{VERBOSE}->print(getVerboseDumpLvl(),'Dumping a hash', [ Dumper(\%h) ] );
+
+   return;  
+ }
 
 1;
 
-__END__
-
-=head1 Verbose demo
-
- use lib './';
-
- use verbose;
-
- my $d = verbose->new(
-   {
-     VERBOSITY=>3, 
-     LABELS=>1, 
-     TIMESTAMP=>1, 
-     HANDLE=>*STDERR
-   } 
- );
-
- #$d->showself;
-
- my @a=(1,2,3);
- my %h=(a=>1, b=>2, c=>3);
- my $x=1;
-
- #$d->print(@a);
- #$d->print(%h);
-
- print "doing some work with \@a\n";
- $d->print(1,'reference to @a', \@a);
-
- print "doing some work with \%h\n";
- $d->print(2,'reference to %h', \%h);
-
- print "doing some work with with an anonymous hash\n";
- $d->print(3,'anonymous hash ref', {x=>24, y=>25, z=>26});
-
- print "doing some work with with an anonymous array\n";
- $d->print(4,'anonymous array ref', [7,8,9]);
-
-
 =cut
+
+1;
+
